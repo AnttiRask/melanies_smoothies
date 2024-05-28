@@ -44,3 +44,8 @@ if ingredients_list:
 
         success_text = f"Your Smoothie is ordered, {name_on_order.strip()}!"
         st.success(success_text, icon="✅")
+
+# New section to display fruityvice nutrition information
+import requests
+fruityvice_response = requests.get("https://fruityvice.com/api/fruit/watermelon")
+st.text(fruityvice_response)
