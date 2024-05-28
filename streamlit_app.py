@@ -11,8 +11,10 @@ st.write(
     """
 )
 
+# Sanitize name_on_order input
 name_on_order = st.text_input("Name on Smoothie:")
-st.write("The name on your Smoothie will be:", name_on_order)
+sanitized_name = name_on_order.strip()
+st.write("The name on your Smoothie will be:", sanitized_name)
 
 cnx = st.connection("snowflake")
 session = cnx.session()
