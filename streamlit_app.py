@@ -5,7 +5,7 @@ import requests
 # Function to insert order into Snowflake database
 def insert_order(ingredients, name_on_order):
     try:
-        cnx = st.experimental_get_query_params()['snowflake']
+        cnx = st.connection("snowflake")
         session = cnx.session()
 
         # Use parameterized query to prevent SQL injection
