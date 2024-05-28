@@ -49,17 +49,23 @@ if ingredients_list:
         except requests.RequestException as e:
             st.error(f"Error accessing API: {e}")
 
+    # Validate selected ingredients
+    if not all(ingredient in pd_df['FRUIT_NAME'].values for ingredient in ingredients_list):
+        st.error("Invalid ingredient selected.")
+    
     # Use parameterized query to prevent SQL injection
     my_insert_stmt = "INSERT INTO smoothies.public.orders (ingredients, name_on_order) VALUES (?, ?)"
-    session.sql(my_insert_stmt, (ingredients_string, sanitized_name))
-    
-    # my_insert_stmt = """ insert into smoothies.public.orders(ingredients, name_on_order)
-    #    values ('""" + ingredients_string + """','"""+name_on_order+ """')"""
-    
+    try:
+        session.sql(my_insert_stmt, (ingredients_string, sanitized_name))
+    except Exception as e:
+        st.error(f"Error inserting order into database: {e}")
+
     time_to_insert = st.button('Submit Order')
 
     if time_to_insert:
-        session.sql(my_insert_stmt).collect()
-
-        success_text = f"Your Smoothie is ordered, {name_on_order.strip()}!"
-        st.success(success_text, icon="✅")
+        try:
+            session.sql(my_insert_stmt, (ingredients_string, sanitized_name)).collect()
+            success_text = f"Your Smoothie is ordered, {sanitized_name}!"
+            st.success(success_text, icon="✅")
+        except Exception as e:
+            st.error(f"Error submitting order: {e}")
