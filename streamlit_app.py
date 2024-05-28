@@ -2,7 +2,6 @@
 import pandas as pd
 import requests
 import streamlit as st
-from snowflake.snowpark.functions import col
 
 # Write directly to the app
 st.title("🥤 Customize Your Smoothie 🥤")
@@ -39,16 +38,21 @@ if ingredients_list:
         search_on=pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
         
         st.subheader(fruit_chosen + ' Nutrition Information')
-        fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + search_on)
-        fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
 
-    #st.write(ingredients_string)
+        try:
+            fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + search_on)
+            fruityvice_response.raise_for_status()    # Raise exception for non-200 status codes
+            fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
+        except requests.RequestException as e:
+            st.error(f"Error accessing API: {e}")
 
-    my_insert_stmt = """ insert into smoothies.public.orders(ingredients, name_on_order)
-        values ('""" + ingredients_string + """','"""+name_on_order+ """')"""
-
-    #st.write(my_insert_stmt)
-    #st.stop()
+    # Use parameterized query to prevent SQL injection
+    my_insert_stmt = "INSERT INTO smoothies.public.orders (ingredients, name_on_order) VALUES (?, ?)"
+    session.sql(my_insert_stmt, (ingredients_string, sanitized_name))
+    
+    # my_insert_stmt = """ insert into smoothies.public.orders(ingredients, name_on_order)
+    #    values ('""" + ingredients_string + """','"""+name_on_order+ """')"""
+    
     time_to_insert = st.button('Submit Order')
 
     if time_to_insert:
