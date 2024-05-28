@@ -30,30 +30,24 @@ ingredients_list = st.multiselect(
     , max_selections=5
 )
 
-if len(ingredients_list) < 5:  # Check if less than 5 ingredients selected
-    additional_ingredient = st.selectbox(
-        'Add an additional ingredient:'
-        , [fruit for fruit in my_dataframe['FRUIT_NAME'].values if fruit not in ingredients_list]
-        , None  # By default, no ingredient selected
-    )
+if ingredients_list:
+    ingredients_string = ''
 
-    if additional_ingredient:
-        ingredients_list.append(additional_ingredient)
+    for fruit_chosen in ingredients_list:
+        ingredients_string += fruit_chosen + ' '
 
-        search_on = pd_df.loc[pd_df['FRUIT_NAME'] == additional_ingredient, 'SEARCH_ON'].iloc[0]
-
+        search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
+        
         try:
             # Secure API request with error handling
             fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + search_on)
             fruityvice_response.raise_for_status()  # Raise exception for non-200 status codes
             fv_json = fruityvice_response.json()
 
-            st.subheader(additional_ingredient + ' Nutrition Information')
+            st.subheader(fruit_chosen + ' Nutrition Information')
             fv_df = st.dataframe(data=fv_json, use_container_width=True)
         except requests.RequestException as e:
             st.error(f"Error accessing API: {e}")
-else:
-    st.error("You can only choose up to 5 ingredients.")
 
     # Validate selected ingredients
     if not all(ingredient in pd_df['FRUIT_NAME'].values for ingredient in ingredients_list):
